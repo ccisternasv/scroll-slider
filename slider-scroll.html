@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+
+<body>
+<style>
+    #container{
+        width: 1200px;
+        background-color: yellow;
+        display: flex;
+        flex-direction: row;
+        overflow-x: scroll;
+        flex-wrap: nowrap;
+    }
+
+    /* hide scrollbar Chrome, Safari and Opera */
+    #container::-webkit-scrollbar{
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    #container{
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    .slider-card{
+        min-width: 350px;
+        min-height: 500px;
+        border: 1px solid green;
+        background-color: lightblue;
+        padding: 1rem 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: 0.3s ease;
+    }
+
+    .slider-card__cover{
+        width: 150px;
+        height: 150px;
+        background-color: yellow;
+        display: flex;
+    }
+
+    .wrapper:first-child{
+        margin-left: 0;
+    }
+    .wrapper{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+    }
+    #center{
+        position: absolute;
+        top:0;
+        width: 1px;
+        border: 1px solid red;
+        display: flex;
+        z-index:9999;
+        height: 100vh;
+        display: block;
+    }
+
+    .highlighted{
+        background-color: lightseagreen;
+        transform: scale(1.05);
+    }
+
+    .slider-btn{
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+    }
+</style>    
+
+<div id='center'></div>
+<div class='wrapper'>
+    <div><button id="slider-prev-btn" class="slider-btn"><</button></div>
+    <div id='container'>
+        <div class='slider-card'>More</div>
+        <div class='slider-card'>
+            <div class="slider-card__cover"></div>
+            <div class="slider-card__name">Name test</div>
+            <div class="slider-card__country">Country test</div>
+        </div>
+        <div class='slider-card'>1</div>
+        <div class='slider-card'>2</div>
+        <div class='slider-card'>3</div>
+        <div class='slider-card'>4</div>
+        <div class='slider-card'>5</div>
+        <div class='slider-card'>6</div>
+        <div class='slider-card'>7</div>
+        <div class='slider-card'>8</div>
+        <div class='slider-card'>9</div>
+        <div class='slider-card'>10</div>
+        <div class='slider-card'>11</div>
+        <div class='slider-card'>12</div>
+        <div class='slider-card'>13</div>
+        <div class='slider-card'>14</div>
+        <div class='slider-card'>15</div>
+        <div class='slider-card'>16</div>
+        <div class='slider-card'>17</div>
+        <div class='slider-card'>18</div>
+        <div class='slider-card'>19</div>
+        <div class='slider-card'>more</div>
+   
+    </div>
+    <div><button id="slider-next-btn" class="slider-btn">></button></div>
+</div>
+<script>
+
+    let activeCard          = -1;
+    const container         = document.getElementById('container');
+    const sliderPrevBtn     = document.getElementById('slider-prev-btn');
+    const sliderNextBtn     = document.getElementById('slider-next-btn');
+    const children          = container.children;
+    const childrenCount     = children.length;
+
+
+    const centerContainer   =  document.getElementById('center');
+
+    const getSliderCardByIndex = (cardIndex) => {
+        return (children)[cardIndex];
+    }
+
+    const scrollSlider = (factor) =>{
+        const cardSize = 350;
+        activeCard = activeCard + factor;
+        
+        container.scrollLeft = container.scrollLeft +(cardSize * factor);
+    }
+
+    const scrollSliderIntoView = (targetIndex) =>{
+        const target = getSliderCardByIndex(targetIndex);
+        activeCard = targetIndex;
+        target.scrollIntoView({behavior:'smooth', inline:'center'});
+    }
+
+    const sliderBtnNav = (e) =>{
+
+        const nav =  e.target.id;
+
+        switch (nav) {
+            case 'slider-prev-btn':
+                if(activeCard > 0 && activeCard < childrenCount){
+                    //negative scrolling
+                    scrollSlider(-1);
+        console.log('prev');
+
+                }
+                break;
+            case 'slider-next-btn':
+                if(activeCard > 0 && activeCard < childrenCount){
+                    //positive scrolling
+                    scrollSlider(1);
+        console.log('next');
+
+                }
+            break;
+            default:
+                break;
+        }
+        verifyNavBtns();
+    }
+
+    const verifyNavBtns = () =>{
+        //enable slider nav controls by default
+        sliderNextBtn.disable = false;
+        sliderPrevBtn.disable = false;
+
+        //check if reach the end
+        if(activeCard == (childrenCount - 1)){
+            sliderNextBtn.disable = true;
+        }
+        //check if first elem is active
+        if(activeCard == 0){
+            sliderPrevBtn.disable = true;
+        }
+    }
+
+let options = {
+    //observe viewport
+    root: null,
+    //center of viewport
+    //This creates a vertical line horizontally centered
+    rootMargin:'0% -50% 0% -50%', 
+    threshold: 0
+}
+
+const callback = (entries, observer) => {
+    entries.forEach(entry => {
+        if(entry.isIntersecting){
+            entry.target.classList.add('highlighted');
+            activeCard = [...container.children].indexOf(entry.target);
+            console.log(activeCard);
+        } else{
+            entry.target.classList.remove('highlighted');
+        }
+    });
+}
+
+
+[...children].forEach(element => {
+    let observer =  new IntersectionObserver( callback, options);
+    observer.observe(element);
+});
+
+
+
+//attach event listener to navigation control
+sliderPrevBtn.addEventListener('click', sliderBtnNav);
+sliderNextBtn.addEventListener('click', sliderBtnNav);
+
+scrollSliderIntoView(childrenCount/2);
+
+</script>
+
+</body>
+</html>
